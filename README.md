@@ -1,3 +1,7 @@
+# ComBatHarmonization Fork
+
+This fork was created by Bogdan Petre, bogpetre@gmail.com, to incorporate reference batch harmonization. It may be removed if this feature is incorporated upstream. If you do not need reference batch harmonization (or it becomes incorporated upstream) you should instead use Jean-Philippe Fortin's version since it is more likely to be maintained. The remainder of this README is basically.
+
 # ComBatHarmonization
 ### Harmonization of multi-site imaging data with ComBat
 
@@ -65,7 +69,7 @@ The reference implementation (Standard Version) of ComBat, developed for gene ex
 | Empirical Bayes   | x |   x     | x      |
 | No empirical Bayes   | x |    x    |       |
 | Mean adjustment only | x |    x    |        |
-| Reference batch | x |    x    |        |
+| Reference batch | x |    x    |   x    |
 | Can handle missing values | x |        |        |
 
 
