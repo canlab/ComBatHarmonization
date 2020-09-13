@@ -22,6 +22,9 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
             switch varargin{i}
                 case 'ref'                
                     ref = varargin{i+1};
+                    if ~ismember(ref,batch)
+                        error('Reference is not in batch list, please check inputs');
+                    end
             end
         end
     end
@@ -45,7 +48,10 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
 	wh = cellfun(@(x) isequal(x,intercept),num2cell(design,1));
 	bad = find(wh==1);
 	design(:,bad)=[];
-
+    
+    if ~isempty(ref)
+        design(:,ref) = 1;
+    end
 
 	fprintf('[combat] Adjusting for %d covariate(s) of covariate level(s)\n',size(design,2)-size(batchmod,2))
 	% Check if the design is confounded
@@ -68,26 +74,26 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
 	fprintf('[combat] Standardizing Data across features\n')
 	B_hat = inv(design'*design)*design'*dat';
 	%Standarization Model
-    if isempty(ref) || ~ismember(ref,batch)
-        if ~isempty(ref)
-            warning('Reference batch not found in batch ID list. Using non-reference batch adjustment');
-        end
-        ref_mean = (n_batches/n_array)*B_hat(1:n_batch,:);
-        ref_var = ((dat-(design*B_hat)').^2)*repmat(1/n_array,n_array,1);
+    if isempty(ref)
+        grand_mean = (n_batches/n_array)*B_hat(1:n_batch,:);
+        var_pooled = ((dat-(design*B_hat)').^2)*repmat(1/n_array,n_array,1);
     else
         uniq_batch = unique(batch,'stable');
-        ref_mean = B_hat(ismember(uniq_batch,ref),:);
-        ref_var = ((dat(:,ismember(batch,ref)) - (design(ismember(batch,ref),:)*B_hat)').^2) * ...
-            repmat(1/n_batches(ismember(uniq_batch,ref)), n_batches(ismember(uniq_batch,ref)), 1);
+        grand_mean = B_hat(ismember(uniq_batch,ref),:);
+        
+        ref_dat = dat(:,ismember(batch,ref));
+        ref_n = n_batches(ismember(uniq_batch,ref));
+        var_pooled = ((ref_dat - (design(ismember(batch,ref),:)*B_hat)').^2) * ...
+            repmat(1/ref_n, ref_n, 1);
     end
-	stand_mean = ref_mean'*repmat(1,1,n_array);
+	stand_mean = grand_mean'*repmat(1,1,n_array);
 
 	if not(isempty(design))
 		tmp = design;
 		tmp(:,1:n_batch) = 0;
 		stand_mean = stand_mean+(tmp*B_hat)';
 	end	
-	s_data = (dat-stand_mean)./(sqrt(ref_var)*repmat(1,1,n_array));
+	s_data = (dat-stand_mean)./(sqrt(var_pooled)*repmat(1,1,n_array));
 
 	%Get regression batch effect parameters
 	fprintf('[combat] Fitting L/S model and finding priors\n')
@@ -131,6 +137,11 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
             delta_star = [delta_star; temp(2,:)];
         end
     end
+    
+    if ~isempty(ref) %this will be approximately true, but this is a good fix all the same
+        gamma_star(ismember(uniq_batch,ref),:) = 0;
+        delta_star(ismember(uniq_batch,ref),:) = 1;
+    end
 	    
 	fprintf('[combat] Adjusting the Data\n')
 	bayesdata = s_data;
@@ -140,7 +151,7 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
 		bayesdata(:,indices) = (bayesdata(:,indices)-(batch_design(indices,:)*gamma_star)')./(sqrt(delta_star(j,:))'*repmat(1,1,n_batches(i)));
 		j = j+1;
 	end
-	bayesdata = (bayesdata.*(sqrt(ref_var)*repmat(1,1,n_array)))+stand_mean;
+	bayesdata = (bayesdata.*(sqrt(var_pooled)*repmat(1,1,n_array)))+stand_mean;
 
 end
 

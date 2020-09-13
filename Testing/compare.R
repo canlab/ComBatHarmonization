@@ -24,7 +24,7 @@ files.matlab <- paste0("testdata_combat_", types, "_matlab.csv")
 files.python <- paste0("testdata_combat_", types, "_python.csv")
 
 # Matlab vs R
-avail <- 1:4
+avail <- c(1:4,17:20)
 for (i in avail){
 	data_r <- read.csv(file.path("outputData", files.r[i])) %>% as.matrix
 	data_matlab <- read.csv(file.path("outputData", files.matlab[i]), head=FALSE) %>% as.matrix
