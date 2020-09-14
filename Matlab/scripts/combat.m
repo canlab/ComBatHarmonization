@@ -24,6 +24,14 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
                     ref = varargin{i+1};
                     if ~ismember(ref,batch)
                         error('Reference is not in batch list, please check inputs');
+                    else
+                        if ischar(ref)
+                            fprintf('Harmonizing to reference batch %s\n', ref);
+                        elseif isnumeric(ref) || islogical(ref)
+                            fprintf('Harmonizing to reference batch %d', ref);
+                        else
+                            error('Ref argument must be type numeric or char\n');
+                        end
                     end
             end
         end
@@ -48,9 +56,11 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
 	wh = cellfun(@(x) isequal(x,intercept),num2cell(design,1));
 	bad = find(wh==1);
 	design(:,bad)=[];
-    
+            
+    uniq_batch = unique(batch,'stable');
+
     if ~isempty(ref)
-        design(:,ref) = 1;
+        design(:,ismember(uniq_batch,ref)) = 1;
     end
 
 	fprintf('[combat] Adjusting for %d covariate(s) of covariate level(s)\n',size(design,2)-size(batchmod,2))
@@ -78,13 +88,16 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
         grand_mean = (n_batches/n_array)*B_hat(1:n_batch,:);
         var_pooled = ((dat-(design*B_hat)').^2)*repmat(1/n_array,n_array,1);
     else
-        uniq_batch = unique(batch,'stable');
         grand_mean = B_hat(ismember(uniq_batch,ref),:);
         
         ref_dat = dat(:,ismember(batch,ref));
         ref_n = n_batches(ismember(uniq_batch,ref));
+        try
         var_pooled = ((ref_dat - (design(ismember(batch,ref),:)*B_hat)').^2) * ...
             repmat(1/ref_n, ref_n, 1);
+        catch
+            keyboard
+        end
     end
 	stand_mean = grand_mean'*repmat(1,1,n_array);
 
