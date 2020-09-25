@@ -6,6 +6,7 @@
 
 
 function bayesdata = combat(dat, batch, mod, parametric, varargin)
+    dat = double(dat); % there are EB algorithm convergence issues if input data is single
     [sds] = std(dat')';
     wh = find(sds==0);
     [ns,ms] = size(wh);
@@ -26,9 +27,9 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
                         error('Reference is not in batch list, please check inputs');
                     else
                         if ischar(ref)
-                            fprintf('Harmonizing to reference batch %s\n', ref);
+                            fprintf('[combat] Harmonizing to reference batch %s\n', ref);
                         elseif isnumeric(ref) || islogical(ref)
-                            fprintf('Harmonizing to reference batch %d', ref);
+                            fprintf('[combat] Harmonizing to reference batch %d\n', ref);
                         else
                             error('Ref argument must be type numeric or char\n');
                         end
@@ -40,12 +41,12 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
     batchmod = categorical(batch);
     batchmod = dummyvar({batchmod});
 	n_batch = size(batchmod,2);
-	levels = unique(batch);
+	uniq_batch = unique(batch,'stable');
 	fprintf('[combat] Found %d batches\n', n_batch);
 
 	batches = cell(0);
 	for i=1:n_batch
-		batches{i}=find(batch == levels(i));
+		batches{i}=find(batch == uniq_batch(i));
 	end
 	n_batches = cellfun(@length,batches);
 	n_array = sum(n_batches);
@@ -57,8 +58,6 @@ function bayesdata = combat(dat, batch, mod, parametric, varargin)
 	bad = find(wh==1);
 	design(:,bad)=[];
             
-    uniq_batch = unique(batch,'stable');
-
     if ~isempty(ref)
         design(:,ismember(uniq_batch,ref)) = 1;
     end

@@ -1,6 +1,7 @@
 function adjust = itSol(sdat,g_hat,d_hat,g_bar,t2,a,b, conv)
   g_old = g_hat;
   d_old = d_hat;
+  changevec = [1];
   change = 1;
   count = 0;
   n = size(sdat,2);
@@ -13,6 +14,11 @@ function adjust = itSol(sdat,g_hat,d_hat,g_bar,t2,a,b, conv)
     g_old = g_new;
     d_old = d_new;
     count = count+1;
+    changevec = [changevec, change];
+    if count > 1000
+        warning('EB algorithm did not converge in 1000 steps');
+        break;
+    end
   end
   adjust = [g_new; d_new];
 end
