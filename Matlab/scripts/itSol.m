@@ -16,7 +16,7 @@ function adjust = itSol(sdat,g_hat,d_hat,g_bar,t2,a,b, conv)
     count = count+1;
     changevec = [changevec, change];
     if count > 1000
-        warning('EB algorithm did not converge in 1000 steps');
+        warning('EB algorithm did not converge in 1000 steps.');
         break;
     end
   end

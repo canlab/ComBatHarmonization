@@ -5,7 +5,11 @@
 
 
 
-function bayesdata = combat(dat, batch, mod, parametric, varargin)
+function [bayesdata, gamma_star, delta_star] = combat(dat, batch, mod, parametric, varargin)
+    if any(isnan(dat(:)))
+        error('Input data contains nan entries. These will break combat. Please fix and rerun');
+    end
+
     dat = double(dat); % there are EB algorithm convergence issues if input data is single
     [sds] = std(dat')';
     wh = find(sds==0);
