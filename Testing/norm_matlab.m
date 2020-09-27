@@ -7,16 +7,26 @@ dlmwrite('outputData/testdata_combat_parametric_adjusted_matlab.csv',norm,'delim
 norm = combat(data,batch,mod,0);
 dlmwrite('outputData/testdata_combat_nonparametric_adjusted_matlab.csv',norm,'delimiter',',','precision','%.14f');
 
+norm = combat(data,batch,mod,1,'meanOnly',1);
+dlmwrite('outputData/testdata_combat_parametric_adjusted_matlab.csv',norm,'delimiter',',','precision','%.14f');
+norm = combat(data,batch,mod,0,'meanOnly',1);
+dlmwrite('outputData/testdata_combat_nonparametric_adjusted_matlab.csv',norm,'delimiter',',','precision','%.14f');
+
 norm = combat(data,batch,mod,1,'ref',1);
-dlmwrite('outputData/testdata_combat_parametric_adjusted_batchref_matlab.csv',norm,'delimiter',',','precision','%.14f');
+dlmwrite('outputData/testdata_combat_parametric_adjusted_meanonly_matlab.csv',norm,'delimiter',',','precision','%.14f');
 norm = combat(data,batch,mod,0,'ref',1);
-dlmwrite('outputData/testdata_combat_nonparametric_adjusted_batchref_matlab.csv',norm,'delimiter',',','precision','%.14f');
+dlmwrite('outputData/testdata_combat_nonparametric_adjusted_meanonly_matlab.csv',norm,'delimiter',',','precision','%.14f');
 
 mod = [];
 norm = combat(data,batch,mod,1);
 dlmwrite('outputData/testdata_combat_parametric_unadjusted_matlab.csv',norm,'delimiter',',','precision','%.14f');
 norm = combat(data,batch,mod,0);
 dlmwrite('outputData/testdata_combat_nonparametric_unadjusted_matlab.csv',norm,'delimiter',',','precision','%.14f');
+
+norm = combat(data,batch,mod,1,'meanOnly',1);
+dlmwrite('outputData/testdata_combat_parametric_unadjusted_meanonly_matlab.csv',norm,'delimiter',',','precision','%.14f');
+norm = combat(data,batch,mod,0,'meanOnly',1);
+dlmwrite('outputData/testdata_combat_nonparametric_unadjusted_meanonly_matlab.csv',norm,'delimiter',',','precision','%.14f');
 
 norm = combat(data,batch,mod,1,'ref',1);
 dlmwrite('outputData/testdata_combat_parametric_unadjusted_batchref_matlab.csv',norm,'delimiter',',','precision','%.14f');

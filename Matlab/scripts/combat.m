@@ -22,6 +22,7 @@ function [bayesdata, gamma_star, delta_star] = combat(dat, batch, mod, parametri
     end
     
     ref = [];
+    meanOnly = false;
     for i = 1:length(varargin)
         if ischar(varargin{i})
             switch varargin{i}
@@ -38,6 +39,15 @@ function [bayesdata, gamma_star, delta_star] = combat(dat, batch, mod, parametri
                             error('Ref argument must be type numeric or char\n');
                         end
                     end
+                case 'meanOnly'
+                    if varargin{i+1} == 1
+                        meanOnly = true;
+                    elseif varargin{i+1} == 0
+                        meanOnly = false;
+                    else
+                        error('Did not understand argument to meanOnly');
+                    end
+                        
             end
         end
     end
@@ -118,7 +128,11 @@ function [bayesdata, gamma_star, delta_star] = combat(dat, batch, mod, parametri
 	delta_hat = [];
 	for i=1:n_batch
 		indices = batches{i};
-		delta_hat = [delta_hat; var(s_data(:,indices)')];
+        if meanOnly
+            delta_hat = [delta_hat; ones(1,size(s_data,1))];
+        else
+            delta_hat = [delta_hat; var(s_data(:,indices)')];
+        end
 	end
 
 	%Find parametric priors:
@@ -136,10 +150,15 @@ function [bayesdata, gamma_star, delta_star] = combat(dat, batch, mod, parametri
         fprintf('[combat] Finding parametric adjustments\n')
         gamma_star =[]; delta_star=[];
         for i=1:n_batch
-            indices = batches{i};
-            temp = itSol(s_data(:,indices),gamma_hat(i,:),delta_hat(i,:),gamma_bar(i),t2(i),a_prior(i),b_prior(i), 0.001);
-            gamma_star = [gamma_star; temp(1,:)];
-            delta_star = [delta_star; temp(2,:)];
+            if meanOnly
+                gamma_star = [gamma_star; postmean(gamma_hat(i,:),gamma_bar(i), 1, 1, t2(i))];
+                delta_star = [delta_star; ones(1,size(gamma_hat(i,:),2))];
+            else
+                indices = batches{i};
+                temp = itSol(s_data(:,indices),gamma_hat(i,:),delta_hat(i,:),gamma_bar(i),t2(i),a_prior(i),b_prior(i), 0.001);
+                gamma_star = [gamma_star; temp(1,:)];
+                delta_star = [delta_star; temp(2,:)];
+            end
         end
     end
 	    
@@ -147,6 +166,9 @@ function [bayesdata, gamma_star, delta_star] = combat(dat, batch, mod, parametri
         gamma_star =[]; delta_star=[];
         fprintf('[combat] Finding non-parametric adjustments\n')
         for i=1:n_batch
+            if meanOnly
+                delta_hat(i,:) = 1;
+            end
             indices = batches{i};
             temp = inteprior(s_data(:,indices),gamma_hat(i,:),delta_hat(i,:));
             gamma_star = [gamma_star; temp(1,:)];
