@@ -1,11 +1,49 @@
+% ComBat Harmonization across multibatch datasets
+%
+% [bayesdata, gamma_star, delta_star, gamma_hat, delta_hat] = combat(dat,
+% batch, mod, parametric, varargin)
+%
+% :: Input ::
+%
+%   dat       - p x n data matrix to harmonize
+%   batch     - n x 1 vector of batch indicator values, one unique value per
+%                   batch
+%   mod       - n x d design matrix of explanatory variables to subtract from
+%                   variance estimates. Do not include outcomes you intend to
+%                   train classifiers for in subsequent analyses.
+%   parametric - 0/1 label indicating whether to use parametric or
+%                   nonparametric adjustment.
+% 
+% :: Optional Input ::
+% 
+%   ref       - followed by a value from batch vector indicating which
+%                   batch to use as a reference batch. Without this value
+%                   data is harmonized to grand mean, not any particular
+%                   batch's distribution. If performing cross validation
+%                   with ComBat specify a training set batch here.
+%
+%  meanOnly   - followed by a 0/1 value indicating whether or not to
+%                   perform mean harmonization without variance
+%                   harmonization. Useful if you're getting intractable
+%                   scaling problems with mean + variance harmonization.
+%
+% :: Output ::
+%
+%   bayesdata   - p x n data matrix of harmonized values
+%   gamma_star  - posterior batch means
+%   delta_star  - posterior batch variances
+%   gamma_hat   - empirical batch means
+%   delta_hat   - empirical batch variances
+%
+% Note: it is helpful to compare empirical and posterior means and
+% variances. If you have a dramatic change between the two this indicates
+% that the model priors are driving your fits, which is not a good thing.
+% This could indicate violations of distributional assumptions, which can
+% occur if you have problematic data. Often intelligent spatial masking of
+% your input data to remove mean and variance outliers can fix this.
+% 
 
-%data = randn(1000,10);
-%batch = [1 1 1 1 1 2 2 2 2 2];
-%mod = [1 2 1 2 1 2 1 2 1 2]';
-
-
-
-function [bayesdata, gamma_star, delta_star] = combat(dat, batch, mod, parametric, varargin)
+function [bayesdata, gamma_star, delta_star, gamma_hat, delta_hat] = combat(dat, batch, mod, parametric, varargin)
     if any(isnan(dat(:)))
         error('Input data contains nan entries. These will break combat. Please fix and rerun');
     end
@@ -143,8 +181,7 @@ function [bayesdata, gamma_star, delta_star] = combat(dat, batch, mod, parametri
 	for i=1:n_batch
 		a_prior=[a_prior aprior(delta_hat_cell{i})];
 		b_prior=[b_prior bprior(delta_hat_cell{i})];
-	end
-
+    end    
 	
 	if parametric
         fprintf('[combat] Finding parametric adjustments\n')
